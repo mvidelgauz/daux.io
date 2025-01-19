@@ -8,10 +8,15 @@ static-single
 /vendor
 /build
 .phpunit.result.cache
+.phpunit.cache
 .php_cs.cache
 .php-cs-fixer.cache
 coverage.xml
+coverage.clover
 test-report.xml
+
+.yarn/cache
+.yarn/*.gz
 
 /prettier.config.js
 /.eslintrc.js
