@@ -1,11 +1,8 @@
-name: CI
+name: PHP
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-      types: [opened, synchronize, reopened]
+  - push
+  - pull_request
 
 jobs:
   build:
@@ -13,7 +10,7 @@ jobs:
       max-parallel: 15
       matrix:
         operating-system: [ubuntu-latest, macOS-latest]
-        php-versions: ['8.1', '8.2']
+        php-versions: ['8.1', '8.2', '8.3']
         # TODO : enable tests on windows
         #include:
         #  - operating-system: windows-latest
@@ -23,10 +20,10 @@ jobs:
     runs-on: ${{ matrix.operating-system }}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Setup PHP
-      uses: shivammathur/setup-php@2.25.1
+      uses: shivammathur/setup-php@2.31.1
       with:
         php-version: ${{ matrix.php-versions }}
         extensions: mbstring, dom, intl, iconv
@@ -48,74 +45,3 @@ jobs:
 
     - name: Run test suite
       run: composer run-script test
-
-  frontend:
-    name: Frontend tests
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Setup PHP
-      uses: shivammathur/setup-php@2.25.1
-      with:
-        php-version: '8.1'
-        extensions: mbstring, dom, intl, iconv
-
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-progress --no-suggest
-
-    - name: Generate documentation
-      run: bin/daux generate
-
-    - name: Generate documentation in single file
-      run: bin/daux generate --format=html-file --destination=static-single
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v3.6.0
-      with:
-        node-version: '16.x'
-        cache: 'yarn'
-
-    - name: yarn install
-      run: yarn install
-
-    - name: yarn build
-      run: yarn build
-
-    - name: yarn test
-      run: yarn test
-
-  sonarcloud:
-    name: "SonarCloud"
-    runs-on: ubuntu-latest
-    steps:
-
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-
-    - name: Setup PHP
-      uses: shivammathur/setup-php@2.25.1
-      with:
-        php-version: 8.1
-        extensions: mbstring, dom, intl, iconv
-        coverage: xdebug
-
-    - name: Install dependencies
-      run: composer install --prefer-dist --no-progress --no-suggest
-
-    - name: Install tools
-      run: ./scripts/install_tools.sh
-
-    - name: Run test suite
-      run: composer run-script test:coverage
-
-    - name: Fix code coverage paths
-      run: sed -i 's@'$GITHUB_WORKSPACE'@/github/workspace/@g' coverage.xml
-
-    - name: SonarCloud Scan
-      uses: SonarSource/sonarcloud-github-action@v1.9
-      env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
